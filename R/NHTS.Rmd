@@ -1,0 +1,62 @@
+library("devtools")
+install("~/ITHIM/")
+library("ITHIM")
+
+trippub <- read.csv(file = "./data/trippub.csv")
+
+trippub <- with(trippub,{
+    data.frame(HOUSEID = HOUSEID,
+               PERSONID = PERSONID,
+               TDCASEID = TDCASEID,
+               AT = TRPTRANS,
+               #AT = ifelse(TRPTRANS == "22", "cycle",
+               #         ifelse(TRPTRANS == "23", "walk",
+                                        #         ifelse(!is.na(TRPTRANS), "other", NA))),
+               TRVL_MIN = as.numeric(TRVLCMIN),
+               URBRUR  = as.factor(URBRUR),
+               MSACAT = as.factor(MSACAT),
+               MSA = ifelse(MSASIZE %in% 1:5, TRUE, FALSE),
+               TRPTRANS = as.factor(TRPTRANS),
+               TRPMILES = as.numeric(TRPMILES)
+)})
+
+
+perpub <- read.csv(file = "./data/perpub.csv")
+perpub <- with(perpub,{
+                    data.frame(HOUSEID = HOUSEID,
+                               PERSONID = PERSONID,
+                               SEX = as.factor(ifelse(R_SEX=="1", "M", ifelse(R_SEX=="2", "F", NA))),
+                               AGE = as.numeric(R_AGE),
+                               # AGE = as.factor(ITHIM:::convertToAgeClass(R_AGE)),
+                               MSA = ifelse(MSASIZE %in% 1:5, TRUE, FALSE),
+                               HHSTATE = as.character(HHSTATE),
+                               # HHS = as.character(convertToHHS(as.character(HHSTATE))),
+                               # MSA_ID = as.character(as.integer(HHC_MSA)), stringsAsFactors = FALSE,
+                               HHFAMINC = as.factor(HHFAMINC),
+                               #NWALKTRP = as.numeric(if(NWALKTRP < 0, NA, NWALKTRP)),
+                               #NBIKETRP = as.numeric(if(NBIKETRP < 0, NA, NBIKETRP)))
+                               NWALKTRP = NWALKTRP,
+                               NBIKETRP = NBIKETRP)
+})
+
+
+perpub <- with(perpub,{
+    data.frame(houseID=HOUSEID, subjectID=PERSONID, sex = SEX, age = AGE, location = HHSTATE, income = HHFAMINC, nwalktrp = NWALKTRP, nbiketrp = NBIKETRP)
+    })
+
+trippub <- with(trippub,{
+    data.frame(houseID=HOUSEID, subjectID=PERSONID, duration = TRVL_MIN, mode = AT)
+})
+
+NHTS.df <- dplyr::left_join(perpub, trippub, by = c("houseID","subjectID"))
+
+NHTS.df <- within(NHTS.df, {
+    id <- paste0(houseID,"-",subjectID)
+    duration <- ifelse(is.na(duration), 0, duration)
+    mode <- mode
+    #mode <- factor(mode, levels = c("walk","cycle","other"))
+    location <- location
+})
+
+
+#saveRDS(NHTS.df, file = "~/GHI/R/data/NHTS.df.rds")
