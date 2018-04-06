@@ -8,7 +8,7 @@ library("xtable")
 #install("~/ITHIM/")
 #library("ITHIM")
 opts_knit$set(root.dir = "~/NHTS/")
-RDS <- TRUE
+RDS <- FALSE
 ```
 ## Load Trip Data
 ```{r trippub, eval = !RDS, echo = !RDS, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
