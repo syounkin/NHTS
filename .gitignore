@@ -1,3 +1,4 @@
 archive/
 docs/
 *.md
+.DS_Store
