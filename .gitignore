@@ -2,3 +2,4 @@ archive/
 docs/
 *.md
 .DS_Store
+!README.md
