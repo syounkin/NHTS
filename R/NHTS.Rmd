@@ -75,6 +75,7 @@ hhpub <- with(hhpub,{
 })
 
 cbsaNames <- read.csv(file = "./data/cbsa2fipsxw.csv")
+cbsaNames <- cbsaNames %>% filter(!is.na(cbsacode)) %>% group_by(cbsacode) %>% summarise(cbsatitle = first(cbsatitle))
 
 hhpub <- within(hhpub, {
     HH_CBSA <- factor(HH_CBSA, levels = cbsaNames$cbsacode, labels = cbsaNames$cbsatitle)
@@ -103,7 +104,7 @@ NHTS.list <- readRDS(file = "./R/data/NHTS.list.rds")
 ## Summary Statistics
 
 ### Person Data
-```{r summaryPerpub, eval = FALSE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.height = 10}
+```{r summaryPerpub, eval = FALSE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.width = 8}
 NHTS.list$perpub %>% group_by(location) %>% summarise(n = n()) %>% xtable(.) %>% print(.,type = "html", include.rownames = FALSE)
 ```
 ```{r histPerpub, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.height = 10}
@@ -111,22 +112,22 @@ sampleSize.df <- NHTS.list$perpub %>% group_by(location) %>% summarise(n = n())
 
 sampleSize.df <- within(sampleSize.df, location <- factor(location, levels = sampleSize.df$location[order(sampleSize.df$n)]))
 
-sampleSize.df %>% ggplot(aes(x = location, y = n, fill = location)) + geom_bar(stat = "identity") + theme_bw() + labs(x = "", y = "", title = "Sample Size by State", subtitle = "NHTS 2017") + coord_flip() + theme(legend.position = "none")
+sampleSize.df %>% ggplot(aes(x = location, y = n, fill = location)) + geom_bar(stat = "identity") + theme_bw() + labs(x = "", y = "", title = "Sample Size by State", subtitle = "NHTS 2017") + coord_flip() + theme(legend.position = "none") + scale_y_continuous(trans='log10')
 ```
 ### Mode Share
-```{r modeShare, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.height = 10}
+```{r modeShare, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.width = 8}
 modeShare.df <- NHTS.list$NHTS.df %>% group_by(mode) %>% summarise(duration = sum(duration))
 
 modeShare.df <- within(modeShare.df, mode <- factor(mode, levels = modeShare.df$mode[order(modeShare.df$duration)]))
 
-modeShare.df %>% ggplot(aes(x=mode, y = duration, fill = mode)) + geom_bar(stat = "identity") + theme_bw() + labs(x = "", y = "", title = "Total Minutes Traveled by Mode (Urban and Rural)", subtitle = "NHTS 2017") + theme(legend.position="none") + coord_flip()
+modeShare.df %>% ggplot(aes(x=mode, y = duration, fill = mode)) + geom_bar(stat = "identity") + theme_bw() + labs(x = "", y = "", title = "Total Minutes Traveled by Mode (Urban and Rural)", subtitle = "NHTS 2017") + theme(legend.position="none") + coord_flip() + scale_y_continuous(trans='log10')
 ```
 ### Proportion of Households That Never Walk or Bike (Urban & Metro)
-```{r neverWalk, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.height = 10}
+```{r neverWalk, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.width = 8}
 p0.df <- NHTS.list$hhpub %>% filter(!is.na(HH_CBSA) & URBRUR == "urban") %>% group_by(HH_CBSA) %>% summarise(p0 = sum(WALK == "never" & BIKE == "never", na.rm = TRUE)/sum(!is.na(WALK) & !is.na(BIKE)))
 
 orderedLevels <- p0.df$HH_CBSA[order(p0.df$p0)]
 p0.df <- within(p0.df, HH_CBSA <- factor(HH_CBSA, level = orderedLevels))
 
-p0.df %>% ggplot(aes(x=HH_CBSA, y = p0, fill = HH_CBSA)) + geom_bar(stat="identity", position = "dodge") + theme_bw() + labs(x = "", y = "", title = "Proportion of Households That Never Walk or Bike (Urban & Metro)", subtitle = "NHTS 2017 (Urban & MSA)") + theme(legend.position="none") + coord_flip()
+p0.df %>% ggplot(aes(x=HH_CBSA, y = p0, fill = HH_CBSA)) + geom_bar(stat="identity", position = "dodge") + theme_bw() + labs(x = "", y = "", title = "Proportion of Households That Never Walk or Bike", subtitle = "NHTS 2017 (Urban w/ Pop. > 1 million)") + theme(legend.position="none") + coord_flip()
 ```
