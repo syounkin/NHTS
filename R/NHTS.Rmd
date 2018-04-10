@@ -146,3 +146,17 @@ p0.df <- within(p0.df, HH_CBSA <- factor(HH_CBSA, level = orderedLevels))
 
 p0.df %>% ggplot(aes(x=HH_CBSA, y = p0, fill = HH_CBSA)) + geom_bar(stat="identity", position = "dodge") + theme_bw() + labs(x = "", y = "", title = "Proportion of Households That Never Walk or Bike", subtitle = "NHTS 2017, Urban only (State-XXXXX is the group of all MSAs with pop. < 1 million)") + theme(legend.position="none") + coord_flip()
 ```
+### WALK
+
+```{r WALK, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.height = 20, fig.width = 10}
+
+NHTS.list$hhpub$HH_CBSA <- factor(NHTS.list$hhpub$HH_CBSA, levels = orderedLevels)
+
+NHTS.list$hhpub %>% filter(!is.na(WALK)) %>% ggplot(aes(x=HH_CBSA, fill = WALK)) + geom_bar(position = "fill") + theme_bw() + labs(x = "", y = "", title = "WALK", subtitle = "NHTS 2017, Urban only (State-XXXXX is the group of all MSAs with pop. < 1 million)") + coord_flip()
+```
+
+### BIKE
+
+```{r BIKE, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.height = 20, fig.width = 10}
+NHTS.list$hhpub %>% filter(!is.na(BIKE)) %>% ggplot(aes(x=HH_CBSA, fill = BIKE)) + geom_bar(position = "fill") + theme_bw() + labs(x = "", y = "", title = "BIKE", subtitle = "NHTS 2017, Urban only (State-XXXXX is the group of all MSAs with pop. < 1 million)") + coord_flip()
+```
