@@ -8,10 +8,10 @@ library("xtable")
 #install("~/ITHIM/")
 #library("ITHIM")
 opts_knit$set(root.dir = "~/NHTS/")
-RDS <- FALSE
+RDS <- TRUE
 ```
-## Load Trip Data
-```{r trippub, eval = !RDS, echo = !RDS, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+
+```{r trippub, eval = !RDS, echo = FALSE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 
 trippub <- read.csv(file = "./data/trippub.csv")
 
@@ -32,8 +32,7 @@ trippub <- with(trippub,{
 })
 ```
 
-## Load Person Data
-```{r perpub, eval = !RDS, echo = !RDS, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+```{r perpub, eval = !RDS, echo = FALSE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 perpub <- read.csv(file = "./data/perpub.csv")
 perpub <- with(perpub,{
                     data.frame(HOUSEID = HOUSEID,
@@ -57,8 +56,7 @@ perpub <- with(perpub,{
     })
 ```
 
-## Load Household Data
-```{r hhpub, eval = !RDS, echo = !RDS, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+```{r hhpub, eval = !RDS, echo = FALSE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 hhpub <- read.csv(file = "./data/hhpub.csv")
 hhpub <- with(hhpub,{
                     data.frame(HOUSEID = factor(HOUSEID),
@@ -70,7 +68,9 @@ hhpub <- with(hhpub,{
                                TRAIN = factor(ifelse(TRAIN %in% c(-9,-8,-7), NA, TRAIN), levels = 1:5, labels = c("daily","a few times a week","a few times a month","a few times a year","never")),
                                PARA = factor(ifelse(PARA %in% c(-9,-8,-7), NA, PARA), levels = 1:5, labels = c("daily","a few times a week","a few times a month","a few times a year","never")),
                                URBRUR = factor(URBRUR, levels = 1:2, labels = c("urban","rural")),
-                               HH_CBSA = factor(ifelse(HH_CBSA == "XXXXX", NA, as.character(HH_CBSA)))
+                               #HH_CBSA = factor(ifelse(HH_CBSA == "XXXXX", NA, as.character(HH_CBSA))),
+                               HH_CBSA = as.character(HH_CBSA),
+                    HHSTATE = factor(as.character(HHSTATE))
                                )
 })
 
@@ -78,12 +78,12 @@ cbsaNames <- read.csv(file = "./data/cbsa2fipsxw.csv")
 cbsaNames <- cbsaNames %>% filter(!is.na(cbsacode)) %>% group_by(cbsacode) %>% summarise(cbsatitle = first(cbsatitle))
 
 hhpub <- within(hhpub, {
-    HH_CBSA <- factor(HH_CBSA, levels = cbsaNames$cbsacode, labels = cbsaNames$cbsatitle)
+    HH_CBSA <- ifelse(HH_CBSA == "XXXXX", paste0(HHSTATE,"-XXXXX"), as.character(HH_CBSA))
+    HH_CBSA <- factor(HH_CBSA, levels = c(cbsaNames$cbsacode, paste0(levels(HHSTATE),"-XXXXX")), labels = c(as.character(cbsaNames$cbsatitle),paste0(levels(HHSTATE),"-XXXXX")))
 })
 ```
 
-## Join Person and Trip Data
-```{r join, eval = !RDS, echo = !RDS, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+```{r join, eval = !RDS, echo = FALSE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 NHTS.df <- dplyr::left_join(perpub, trippub, by = c("houseID","subjectID"))
 
 NHTS.df <- within(NHTS.df, {
@@ -96,38 +96,53 @@ NHTS.df <- within(NHTS.df, {
 saveRDS(NHTS.list <- list(perpub = perpub, trippub = trippub, hhpub = hhpub, NHTS.df = NHTS.df), file = "./R/data/NHTS.list.rds")
 ```
 
-## Read saved R data object (rds)
-```{r readRDS, eval = RDS, echo = RDS, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+```{r readRDS, eval = RDS, echo = FALSE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 NHTS.list <- readRDS(file = "./R/data/NHTS.list.rds")
 ```
 
-## Summary Statistics
+## Sample Size
 
-### Person Data
+First we present the sample sizes (persons) stratified by state.  Note
+the log scale.  CA, TX, NY, WI, GA, NC, SC each has a sample size
+greater than 10,000.
+
 ```{r summaryPerpub, eval = FALSE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.width = 8}
 NHTS.list$perpub %>% group_by(location) %>% summarise(n = n()) %>% xtable(.) %>% print(.,type = "html", include.rownames = FALSE)
 ```
-```{r histPerpub, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.height = 10}
+```{r histPerpub, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.height = 10}
 sampleSize.df <- NHTS.list$perpub %>% group_by(location) %>% summarise(n = n())
 
 sampleSize.df <- within(sampleSize.df, location <- factor(location, levels = sampleSize.df$location[order(sampleSize.df$n)]))
 
 sampleSize.df %>% ggplot(aes(x = location, y = n, fill = location)) + geom_bar(stat = "identity") + theme_bw() + labs(x = "", y = "", title = "Sample Size by State", subtitle = "NHTS 2017") + coord_flip() + theme(legend.position = "none") + scale_y_continuous(trans='log10')
 ```
-### Mode Share
-```{r modeShare, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.width = 8}
+## Mode Share
+
+Next we look at the overall national mode-share.  We use total
+duration (minutes) per mode.  Note the log scale.  Car, SUV and pickup
+truck are the top three with van in fifth place, just behind walk.
+
+```{r modeShare, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.width = 8}
 modeShare.df <- NHTS.list$NHTS.df %>% group_by(mode) %>% summarise(duration = sum(duration))
 
 modeShare.df <- within(modeShare.df, mode <- factor(mode, levels = modeShare.df$mode[order(modeShare.df$duration)]))
 
 modeShare.df %>% ggplot(aes(x=mode, y = duration, fill = mode)) + geom_bar(stat = "identity") + theme_bw() + labs(x = "", y = "", title = "Total Minutes Traveled by Mode (Urban and Rural)", subtitle = "NHTS 2017") + theme(legend.position="none") + coord_flip() + scale_y_continuous(trans='log10')
 ```
+## Inactive Travelers
+
 ### Proportion of Households That Never Walk or Bike (Urban & Metro)
-```{r neverWalk, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.width = 8}
+
+The household survey poses the question how frequently does the house
+use walk/bike/car/etc.  Here we display the proportion of households
+that responded "never" to walk and to bike.
+
+```{r neverWalk, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.height = 20, fig.width = 10}
+
 p0.df <- NHTS.list$hhpub %>% filter(!is.na(HH_CBSA) & URBRUR == "urban") %>% group_by(HH_CBSA) %>% summarise(p0 = sum(WALK == "never" & BIKE == "never", na.rm = TRUE)/sum(!is.na(WALK) & !is.na(BIKE)))
 
-orderedLevels <- p0.df$HH_CBSA[order(p0.df$p0)]
+orderedLevels <- p0.df$HH_CBSA[order(p0.df$p0, decreasing = TRUE)]
 p0.df <- within(p0.df, HH_CBSA <- factor(HH_CBSA, level = orderedLevels))
 
-p0.df %>% ggplot(aes(x=HH_CBSA, y = p0, fill = HH_CBSA)) + geom_bar(stat="identity", position = "dodge") + theme_bw() + labs(x = "", y = "", title = "Proportion of Households That Never Walk or Bike", subtitle = "NHTS 2017 (Urban w/ Pop. > 1 million)") + theme(legend.position="none") + coord_flip()
+p0.df %>% ggplot(aes(x=HH_CBSA, y = p0, fill = HH_CBSA)) + geom_bar(stat="identity", position = "dodge") + theme_bw() + labs(x = "", y = "", title = "Proportion of Households That Never Walk or Bike", subtitle = "NHTS 2017, Urban only (State-XXXXX is the group of all MSAs with pop. < 1 million)") + theme(legend.position="none") + coord_flip()
 ```
