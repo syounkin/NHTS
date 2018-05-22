@@ -4,6 +4,7 @@
 rm(list=ls())
 library("tidyverse")
 library("xtable")
+library("ggplot2")
 #library("devtools")
 #install("~/ITHIM/")
 #library("ITHIM")
@@ -88,7 +89,7 @@ NHTS.df <- dplyr::left_join(perpub, trippub, by = c("houseID","subjectID"))
 
 NHTS.df <- within(NHTS.df, {
     id <- paste0(houseID,"-",subjectID)
-    duration <- ifelse(is.na(duration), 0, duration)
+    duration <- ifelse(is.na(duration) | duration == -9, 0, duration)
     mode <- mode
     location <- location
 })
@@ -170,3 +171,15 @@ NHTS.list$hhpub <- within(NHTS.list$hhpub, HH_CBSA <- factor(HH_CBSA, levels = r
 NHTS.list$hhpub %>% ggplot(aes(x=HH_CBSA, fill = URBRUR)) + geom_bar(stat = "count") + theme_bw() + labs(x = "", y = "", title = "", subtitle = "NHTS 2017") + coord_flip() + theme(legend.position="none")+ scale_y_continuous(trans='log10')
 ```
 
+```{r normal, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+qq.CA <- NHTS.list$NHTS.df %>% filter(location %in% c("CA")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 1) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk + 6*cycle)))
+
+ggqqplot(qq.CA$logTA)
+```
+```{r normal2, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+qq.CA <- within(qq.CA,{
+    logTA <- logTA - rnorm(n = length(logTA), mean = 3, sd = 0.5)
+})
+
+ggqqplot(qq.CA$logTA)
+```
