@@ -310,6 +310,6 @@ write.csv(activity.scenario.df, file = "./R/data/activity.states.scenario.csv", 
 
 PAF.df <- CRA(activityFile.baseline="~/NHTS/R/data/activity.states.baseline.csv", activityFile.scenario="~/NHTS/R/data/activity.states.scenario.csv")
 
-melt(data.frame(state = rownames(PAF.df), PAF.df)) %>% ggplot(aes(x = state, y = value, colour = variable)) + geom_point()
+melt(data.frame(state = rownames(PAF.df), PAF.df)) %>% ggplot(aes(x = state, y = value, group = variable)) + geom_line(aes(colour = variable))
 
 ```
