@@ -5,9 +5,10 @@ rm(list=ls())
 library("tidyverse")
 library("xtable")
 library("ggplot2")
-#library("devtools")
-#install("~/ITHIM/")
-#library("ITHIM")
+library("ggpubr")
+library("devtools")
+install("~/ITHIM/")
+library("ITHIM")
 opts_knit$set(root.dir = "~/NHTS/")
 RDS <- FALSE
 ```
@@ -275,4 +276,40 @@ qq.SC <- within(qq.SC,{
 })
 
 ggqqplot(qq.SC$logTA)
+```
+
+
+```{r activityFile, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE}
+logTA.df <- NHTS.list$NHTS.df %>%
+    group_by(location, mode, id) %>%
+    summarise( T = sum(duration) ) %>%
+    filter( mode %in% c("walk","cycle") ) %>%
+    spread(mode, T, fill = 0) %>%
+    filter( (walk > 0) | (cycle > 0)) %>%
+    mutate(logTA = log(7*(3*walk + 6*cycle))) %>%
+    group_by(location) %>%
+    summarise( meanlogTA = mean(logTA), sdlogTA = sd(logTA))
+
+p0.df <- NHTS.list$hhpub %>%
+    group_by(HHSTATE) %>%
+    summarise(p0 = sum(WALK == "never" & BIKE == "never", na.rm = TRUE)/sum(!is.na(WALK) & !is.na(BIKE)))
+
+activity.df <- inner_join(logTA.df, p0.df, by = c("location" = "HHSTATE"))
+
+activity.df <- activity.df[,c(1,4,2,3)]
+names(activity.df) <- c("ID","p0","meanlog","sdlog")
+write.csv(activity.df, file = "./R/data/activity.states.baseline.csv", quote = FALSE, row.names = FALSE)
+
+ggplot(activity.df, aes(x = 1 - p0, y = meanlog, colour = sdlog, label = ID)) + geom_point() + geom_text(aes(label = ID), hjust=0, vjust=0)
+
+activity.scenario.df <- within(activity.df,{
+    p0 <- ifelse(p0 - 0.01 < 0, 0, p0 - 0.01)
+})
+
+write.csv(activity.scenario.df, file = "./R/data/activity.states.scenario.csv", quote = FALSE, row.names = FALSE)
+
+PAF.df <- CRA(activityFile.baseline="~/NHTS/R/data/activity.states.baseline.csv", activityFile.scenario="~/NHTS/R/data/activity.states.scenario.csv")
+
+melt(data.frame(state = rownames(PAF.df), PAF.df)) %>% ggplot(aes(x = state, y = value, colour = variable)) + geom_point()
+
 ```
