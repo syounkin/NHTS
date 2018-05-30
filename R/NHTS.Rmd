@@ -176,7 +176,7 @@ NHTS.list$hhpub %>% ggplot(aes(x=HH_CBSA, fill = URBRUR)) + geom_bar(stat = "cou
 #### CA
 
 ```{r normalCA, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis"}
-qq.CA <- NHTS.list$NHTS.df %>% filter(location %in% c("CA")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk + 6*cycle)))
+qq.CA <- NHTS.list$NHTS.df %>% filter(location %in% c("CA")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk/60 + 6*cycle/60)))
 
 ggqqplot(qq.CA$logTA)
 ```
@@ -191,7 +191,7 @@ ggqqplot(qq.CA$logTA)
 #### WI
 
 ```{r normalWI, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis"}
-qq.WI <- NHTS.list$NHTS.df %>% filter(location %in% c("WI")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk + 6*cycle)))
+qq.WI <- NHTS.list$NHTS.df %>% filter(location %in% c("WI")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk/60 + 6*cycle/60)))
 
 ggqqplot(qq.WI$logTA)
 ```
@@ -206,7 +206,7 @@ ggqqplot(qq.WI$logTA)
 #### NY
 
 ```{r normalNY, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis"}
-qq.NY <- NHTS.list$NHTS.df %>% filter(location %in% c("NY")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk + 6*cycle)))
+qq.NY <- NHTS.list$NHTS.df %>% filter(location %in% c("NY")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk/60 + 6*cycle/60)))
 
 ggqqplot(qq.NY$logTA)
 ```
@@ -221,7 +221,7 @@ ggqqplot(qq.NY$logTA)
 #### TX
 
 ```{r normalTX, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis"}
-qq.TX <- NHTS.list$NHTS.df %>% filter(location %in% c("TX")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk + 6*cycle)))
+qq.TX <- NHTS.list$NHTS.df %>% filter(location %in% c("TX")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk/60 + 6*cycle/60)))
 
 ggqqplot(qq.TX$logTA)
 ```
@@ -236,7 +236,7 @@ ggqqplot(qq.TX$logTA)
 #### GA
 
 ```{r normalGA, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis"}
-qq.GA <- NHTS.list$NHTS.df %>% filter(location %in% c("GA")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk + 6*cycle)))
+qq.GA <- NHTS.list$NHTS.df %>% filter(location %in% c("GA")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk/60 + 6*cycle/60)))
 
 ggqqplot(qq.GA$logTA)
 ```
@@ -251,7 +251,7 @@ ggqqplot(qq.GA$logTA)
 #### NC
 
 ```{r normalNC, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis"}
-qq.NC <- NHTS.list$NHTS.df %>% filter(location %in% c("NC")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk + 6*cycle)))
+qq.NC <- NHTS.list$NHTS.df %>% filter(location %in% c("NC")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk/60 + 6*cycle/60)))
 
 ggqqplot(qq.NC$logTA)
 ```
@@ -266,7 +266,7 @@ ggqqplot(qq.NC$logTA)
 #### SC
 
 ```{r normalSC, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis"}
-qq.SC <- NHTS.list$NHTS.df %>% filter(location %in% c("SC")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk + 6*cycle)))
+qq.SC <- NHTS.list$NHTS.df %>% filter(location %in% c("SC")) %>% group_by(location, mode, id) %>% summarise( T = sum(duration) ) %>% filter( mode %in% c("walk","cycle") ) %>% spread(mode, T, fill = 0) %>% filter( (walk > 0) | (cycle > 0)) %>% mutate(logTA = log(7*(3*walk/60 + 6*cycle/60)))
 
 ggqqplot(qq.SC$logTA)
 ```
@@ -286,7 +286,7 @@ logTA.df <- NHTS.list$NHTS.df %>%
     filter( mode %in% c("walk","cycle") ) %>%
     spread(mode, T, fill = 0) %>%
     filter( (walk > 0) | (cycle > 0)) %>%
-    mutate(logTA = log(7*(3*walk + 6*cycle))) %>%
+    mutate(logTA = log(7*(3*walk/60 + 6*cycle/60))) %>%
     group_by(location) %>%
     summarise( meanlogTA = mean(logTA), sdlogTA = sd(logTA))
 
