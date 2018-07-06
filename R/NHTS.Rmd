@@ -18,11 +18,11 @@ RDS <- FALSE
 trippub <- read.csv(file = "./data/trippub.csv")
 
 trippub <- with(trippub,{
-    data.frame(HOUSEID = HOUSEID,
-               PERSONID = PERSONID,
+    data.frame(HOUSEID = as.character(HOUSEID),
+               PERSONID = as.character(PERSONID),
                TDCASEID = TDCASEID,
                TRPTRANS = factor(ifelse(TRPTRANS %in% c(-9,-8,-7,97), NA, TRPTRANS), levels = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20), labels = c("walk","cycle","car","SUV","van","pickup truck","golf cart/Segway","motorcycle/moped","RV","school bus","public or commuter bus","paratransit/Dial-a-ride","private/charter/tour/shuttle bus","city-to-city bus (Greyhound, Megabus)","Amtrak/commuter rail","subway/elevated/light rail/street car","taxi/limo/Uber/Lyft", "rental car/Zipcar/Car2Go", "airplane","boat/ferry/water taxi")),
-               TRVLCMIN = as.numeric(TRVLCMIN),
+               TRVLCMIN = ifelse(as.numeric(TRVLCMIN) < 0, as.numeric(NA), as.numeric(TRVLCMIN)),
                URBRUR  = as.factor(URBRUR),
                MSACAT = as.factor(MSACAT),
                MSA = ifelse(MSASIZE %in% 1:5, TRUE, FALSE),
@@ -37,10 +37,10 @@ trippub <- with(trippub,{
 ```{r perpub, eval = !RDS, echo = FALSE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 perpub <- read.csv(file = "./data/perpub.csv")
 perpub <- with(perpub,{
-                    data.frame(HOUSEID = HOUSEID,
-                               PERSONID = PERSONID,
+                    data.frame(houseid = as.character(HOUSEID),
+                               PERSONID = as.character(PERSONID),
                                SEX = as.factor(ifelse(R_SEX=="1", "M", ifelse(R_SEX=="2", "F", NA))),
-                               AGE = as.numeric(R_AGE),
+                               AGE = ifelse(as.numeric(R_AGE) < 0, as.numeric(NA), as.numeric(R_AGE)),
                                # AGE = as.factor(ITHIM:::convertToAgeClass(R_AGE)),
                                MSA = ifelse(MSASIZE %in% 1:5, TRUE, FALSE),
                                HHSTATE = as.character(HHSTATE),
@@ -54,14 +54,14 @@ perpub <- with(perpub,{
 })
 
 perpub <- with(perpub,{
-    data.frame(houseID=HOUSEID, subjectID=PERSONID, sex = SEX, age = AGE, location = HHSTATE, income = HHFAMINC, nwalktrp = NWALKTRP, nbiketrp = NBIKETRP)
+    data.frame(houseID=houseid, subjectID=PERSONID, sex = SEX, age = AGE, location = HHSTATE, income = HHFAMINC, nwalktrp = NWALKTRP, nbiketrp = NBIKETRP)
     })
 ```
 
 ```{r hhpub, eval = !RDS, echo = FALSE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 hhpub <- read.csv(file = "./data/hhpub.csv")
 hhpub <- with(hhpub,{
-                    data.frame(HOUSEID = factor(HOUSEID),
+                    data.frame(houseID = factor(HOUSEID),
                                BIKE = factor(ifelse(BIKE %in% c(-9,-8,-7), NA, BIKE), levels = 1:5, labels = c("daily","a few times a week","a few times a month","a few times a year","never")),
                                WALK = factor(ifelse(WALK %in% c(-9,-8,-7), NA, WALK), levels = 1:5, labels = c("daily","a few times a week","a few times a month","a few times a year","never")),
                                CAR = factor(ifelse(CAR %in% c(-9,-8,-7), NA, CAR), levels = 1:5, labels = c("daily","a few times a week","a few times a month","a few times a year","never")),
@@ -85,8 +85,17 @@ hhpub <- within(hhpub, {
 })
 ```
 
-```{r join, eval = !RDS, echo = FALSE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+```{r TravelSurvey, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE}
+perpub <- perpub %>% select(houseID, subjectID, sex, age)
+hhpub <- hhpub %>% select(houseID, location = HHSTATE)
+
+NHTS <- new("TravelSurvey", person = perpub, trip = trippub, house = hhpub)
+saveRDS(NHTS, file = "./data/NHTS.ts.rds")
+```
+
+```{r join, eval = TRUE, echo = FALSE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 NHTS.df <- dplyr::left_join(perpub, trippub, by = c("houseID","subjectID"))
+NHTS.df <- full_join(NHTS.df, hhpub, by = "houseID")
 
 NHTS.df <- within(NHTS.df, {
     id <- paste0(houseID,"-",subjectID)
@@ -98,7 +107,7 @@ NHTS.df <- within(NHTS.df, {
 saveRDS(NHTS.list <- list(perpub = perpub, trippub = trippub, hhpub = hhpub, NHTS.df = NHTS.df), file = "./R/data/NHTS.list.rds")
 ```
 
-```{r readRDS, eval = RDS, echo = FALSE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+```{r readRDS, eval = FALSE, echo = FALSE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 NHTS.list <- readRDS(file = "./R/data/NHTS.list.rds")
 ```
 
@@ -112,7 +121,7 @@ greater than 10,000.
 NHTS.list$perpub %>% group_by(location) %>% summarise(n = n()) %>% xtable(.) %>% print(.,type = "html", include.rownames = FALSE)
 ```
 ```{r histPerpub, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, results="asis", fig.height = 10}
-sampleSize.df <- NHTS.list$perpub %>% group_by(location) %>% summarise(n = n())
+sampleSize.df <- NHTS.list$NHTS.df %>% group_by(location) %>% summarise(n = n())
 
 sampleSize.df <- within(sampleSize.df, location <- factor(location, levels = sampleSize.df$location[order(sampleSize.df$n)]))
 
@@ -279,7 +288,7 @@ ggqqplot(qq.SC$logTA)
 ```
 
 
-```{r activityFile, eval = TRUE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE}
+```{r activityFile, eval = FALSE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE}
 logTA.df <- NHTS.list$NHTS.df %>%
     group_by(location, mode, id) %>%
     summarise( T = sum(duration) ) %>%
