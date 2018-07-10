@@ -10,7 +10,7 @@ library("devtools")
 install("~/ITHIM/")
 library("ITHIM")
 opts_knit$set(root.dir = "~/NHTS/")
-RDS <- TRUE
+RDS <- FALSE
 ```
 ## Trip Data
 ```{r trippub, eval = !RDS, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
@@ -99,6 +99,8 @@ saveRDS(NHTS, file = "./data/NHTS.ts.rds")
 
 ```{r TravelSurvey2, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
 NHTS <- readRDS(file = "./data/NHTS.ts.rds")
+person.ID <- NHTS@person %>% mutate(ID = paste(houseID, subjectID, sep = "-")) %>% select(ID)
+trip.ID <- NHTS@trip %>% mutate(ID = paste(houseID, subjectID, sep = "-")) %>% select(ID)
 inner_join(getTA(NHTS), getp0(NHTS), by = "location")
 ```
 
