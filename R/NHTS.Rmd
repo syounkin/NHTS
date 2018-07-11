@@ -64,8 +64,8 @@ perpub <- perpub %>% select(houseID, subjectID, sex, age)
 ```
 ## Household Data
 ```{r hhpub, eval = !RDS, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
-hhpub <- read.csv(file = "./data/hhpub.csv", stringsAsFactors = FALSE)
-hhpub <- with(hhpub,{
+hhpub.raw <- read.csv(file = "./data/hhpub.csv", stringsAsFactors = FALSE)
+hhpub <- with(hhpub.raw,{
                     data.frame(houseID = HOUSEID,
 #                               BIKE = factor(ifelse(BIKE %in% c(-9,-8,-7), NA, BIKE), levels = 1:5, labels = c("daily","a few times a week","a few times a month","a few times a year","never")),
 #                               WALK = factor(ifelse(WALK %in% c(-9,-8,-7), NA, WALK), levels = 1:5, labels = c("daily","a few times a week","a few times a month","a few times a year","never")),
@@ -104,6 +104,17 @@ trip.ID <- NHTS@trip %>% mutate(ID = paste(houseID, subjectID, sep = "-")) %>% s
 inner_join(getTA(NHTS), getp0(NHTS), by = "location")
 ```
 
+```{r TravelSurvey3, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
+hhpub.meta <- hhpub.raw %>% select(houseID = HOUSEID, BIKE, WALK) %>% mutate(houseID = as.integer(houseID))
+
+hhpub.meta <- within(hhpub.meta,{
+    WALK = factor(ifelse(WALK %in% c(-9,-8,-7), NA, WALK), levels = 1:5, labels = c("daily","weekly","monthly","yearly","never"))
+    BIKE = factor(ifelse(BIKE %in% c(-9,-8,-7), NA, BIKE), levels = 1:5, labels = c("daily","weekly","monthly","yearly","never"))
+})
+
+inner_join(NHTS@house, hhpub.meta, by = "houseID") %>% group_by(location) %>% count(WALK, BIKE) %>% ungroup() %>% mutate(WALK = paste0("walk-",WALK), BIKE = paste0("bike-",BIKE))
+
+```
 <!--~~~~~~~~~~~~~~~~~~~~~~~~-->
 <!--~~~~~~~~~~~~~~~~~~~~~~~~-->
 <!--~~~~~~ ARCHIVE ~~~~~~~~~-->
