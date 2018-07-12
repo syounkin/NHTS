@@ -82,25 +82,39 @@ hhpub <- hhpub %>% select(houseID, location = HH_CBSA)
 
 ```{r TravelSurvey, eval = !RDS, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
 NHTS <- new("TravelSurvey", person = perpub, trip = trippub, house = hhpub)
-saveRDS(NHTS, file = "./data/NHTS.ts.rds")
+saveRDS(NHTS, file = "./R/data/NHTS.ts.rds")
 ```
 
 ```{r TravelSurvey2, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
-NHTS <- readRDS(file = "./data/NHTS.ts.rds")
-person.ID <- NHTS@person %>% mutate(ID = paste(houseID, subjectID, sep = "-")) %>% select(ID)
-trip.ID <- NHTS@trip %>% mutate(ID = paste(houseID, subjectID, sep = "-")) %>% select(ID)
-inner_join(getTA(NHTS), getp0(NHTS), by = "location")
+NHTS <- readRDS(file = "~/NHTS/R/data/NHTS.ts.rds")
+inner_join(getTA(NHTS, type = "day"), getp0(NHTS, type = "day"), by = "location")
 ```
 
 ```{r TravelSurvey3, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
 hhpub.meta <- hhpub.raw %>% select(houseID = HOUSEID, BIKE, WALK) %>% mutate(houseID = as.character(houseID))
 
 hhpub.meta <- within(hhpub.meta,{
-    WALK = factor(ifelse(WALK %in% c(-9,-8,-7), NA, WALK), levels = 1:5, labels = c("daily","weekly","monthly","yearly","never"))
-    BIKE = factor(ifelse(BIKE %in% c(-9,-8,-7), NA, BIKE), levels = 1:5, labels = c("daily","weekly","monthly","yearly","never"))
+    WALK.weekly = ifelse(WALK %in% c(-9,-8,-7), NA, ifelse(WALK %in% 1:2, TRUE, FALSE))
+    BIKE.weekly = ifelse(BIKE %in% c(-9,-8,-7), NA, ifelse(BIKE %in% 1:2, TRUE, FALSE))
+    ACTIVE.weekly = ifelse(WALK.weekly | BIKE.weekly, "active", "inactive")
 })
 
-inner_join(NHTS@house, hhpub.meta, by = "houseID") %>% group_by(location) %>% count(WALK, BIKE) %>% ungroup() %>% mutate(WALK = paste0("walk-",WALK), BIKE = paste0("bike-",BIKE))
+ACTIVE.df <- inner_join(NHTS@house, hhpub.meta, by = "houseID") %>% group_by(location) %>% count(ACTIVE.weekly) %>% spread(ACTIVE.weekly, n, fill = 0) %>% mutate(p0 = inactive/(active+inactive)) %>% select(location, p0)
+
+p0.df <- inner_join(ACTIVE.df, getp0(NHTS, type = "day"), by = "location", suffix = c(".survey",".data"))
+
+p0.df %>%
+ ggplot(aes(x = p0.data, y = p0.survey)) +
+ geom_point(colour = "red") +
+ geom_smooth(method = "lm", fill = NA, formula = y ~ x)
+
+lmodel <- lm(p0.survey ~ p0.data, data = p0.df)
+fAT <- 1/lmodel$coefficients["p0.data"]
+
+UK <- readRDS(file = "~/CUSSH/R/data/UK.ts.rds")
+
+TA <- rbind(getTA(NHTS, type = "day", fAT = fAT), getTA(UK, type = "week"))
+p0 <- rbind(getp0(NHTS, type = "day", fAT = fAT), getp0(UK, type = "week"))
 
 ```
 <!--~~~~~~~~~~~~~~~~~~~~~~~~-->
