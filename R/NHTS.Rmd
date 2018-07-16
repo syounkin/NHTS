@@ -99,6 +99,11 @@ hhpub.meta <- within(hhpub.meta,{
     ACTIVE.weekly = ifelse(WALK.weekly | BIKE.weekly, "active", "inactive")
 })
 
+
+```
+
+
+```{r TravelSurvey3c, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
 ACTIVE.df <- inner_join(NHTS@house, hhpub.meta, by = "houseID") %>% group_by(location) %>% count(ACTIVE.weekly) %>% spread(ACTIVE.weekly, n, fill = 0) %>% mutate(p0 = inactive/(active+inactive)) %>% select(location, p0)
 
 p0.df <- inner_join(ACTIVE.df, getp0(NHTS, type = "day"), by = "location", suffix = c(".survey",".data"))
@@ -115,6 +120,9 @@ UK <- readRDS(file = "~/CUSSH/R/data/UK.ts.rds")
 
 TA <- rbind(getTA(NHTS, type = "day", fAT = fAT), getTA(UK, type = "week"))
 p0 <- rbind(getp0(NHTS, type = "day", fAT = fAT), getp0(UK, type = "week"))
+
+TA
+p0
 
 ```
 <!--~~~~~~~~~~~~~~~~~~~~~~~~-->
