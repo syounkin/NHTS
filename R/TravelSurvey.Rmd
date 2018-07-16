@@ -1,25 +1,21 @@
-# Create a TravelSurevy Object (US NHTS 2017)
+# How to Create a TravelSurevy Object
 
-The data can be found here: https://nhts.ornl.gov/assets/2016/download/Csv.zip.
+We use the 2017 US NHTS data for an example.  The data can be found
+here: https://nhts.ornl.gov/assets/2016/download/Csv.zip.
 
-```{r libs, eval = TRUE, echo = FALSE, results = "hide", warning = FALSE, error = FALSE, message = FALSE, fig.width = 8}
-rm(list=ls())
+```{r libs, eval = TRUE, echo = TRUE, results = "hide", warning = FALSE, error = FALSE, message = FALSE, fig.width = 8}
 library("tidyverse")
-library("xtable")
-library("ggplot2")
-library("ggpubr")
 library("devtools")
-install("~/ITHIM/")
 library("ITHIM")
-opts_knit$set(root.dir = "~/NHTS/")
-RDS <- TRUE
 ```
 ## Household Data
+
 First we create a data frame with the household data.  It requires two
 variables _houseID_ and _location_.  _location_ can be whatever the
-user wants.
+user wants.  Identifier variables like _houseID_ and later _subjectID_
+are character class.
 
-```{r hhpub, eval = !RDS, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+```{r hhpub, eval = TRUE, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE}
 hhpub.raw <- read.csv(file = "./data/hhpub.csv", stringsAsFactors = FALSE)
 
 hhpub <- within(hhpub.raw,{
@@ -29,8 +25,15 @@ hhpub <- within(hhpub.raw,{
 
 hhpub <- hhpub %>% select(houseID, location)
 ```
+
 ## Person Data
-```{r perpub, eval = !RDS, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+
+Second is the person (or individual) table.  It contains four
+variables; _houseID_, _subjectID_, _age_ and _sex_.  The variables
+_age_ and _sex_ are factors with levels "child", "adult", "senior" and
+"M" and "F", respectively.
+
+```{r perpub, eval = TRUE, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE}
 perpub.raw <- read.csv(file = "./data/perpub.csv", stringsAsFactors = FALSE)
 
 perpub <- within(perpub.raw,{
@@ -44,25 +47,24 @@ perpub <- perpub %>% select(houseID, subjectID, sex, age)
 ```
 
 ## Trip Data
-```{r trippub, eval = !RDS, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 
+Finally we have the trip data.  The _duration_ variable is numeric and
+_mode_ is a factor with levels "walk", "cycle", "other".
+
+```{r trippub, eval = TRUE, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE}
 trippub.raw <- read.csv(file = "./data/trippub.csv", stringsAsFactors = FALSE)
 
-trippub <- with(trippub.raw,{
-    data.frame(HOUSEID = as.character(HOUSEID),
-               PERSONID = as.character(PERSONID),
-               TRPTRANS = factor(ifelse(TRPTRANS %in% c(-9,-8,-7,97), NA, TRPTRANS), levels = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20), labels = c("walk","cycle","car","SUV","van","pickup truck","golf cart/Segway","motorcycle/moped","RV","school bus","public or commuter bus","paratransit/Dial-a-ride","private/charter/tour/shuttle bus","city-to-city bus (Greyhound, Megabus)","Amtrak/commuter rail","subway/elevated/light rail/street car","taxi/limo/Uber/Lyft", "rental car/Zipcar/Car2Go", "airplane","boat/ferry/water taxi")),
-               TRVLCMIN = ifelse(as.numeric(TRVLCMIN) < 0, as.numeric(NA), as.numeric(TRVLCMIN)), stringsAsFactors = FALSE)
-})
-
-trippub <- with(trippub,{
-    data.frame(houseID=HOUSEID, subjectID=PERSONID, duration = TRVLCMIN, mode = TRPTRANS, stringsAsFactors = FALSE)
+trippub <- within(trippub.raw,{
+    houseID = as.character(HOUSEID)
+    subjectID = as.character(PERSONID)
+    duration = ifelse(as.numeric(TRVLCMIN) < 0, as.numeric(NA), as.numeric(TRVLCMIN))
+    mode = factor(ifelse(TRPTRANS %in% c(-9,-8,-7,97), NA, ifelse(TRPTRANS == 1, "walk", ifelse(TRPTRANS == 2, "cycle", "other"))))
 })
 
 trippub <- trippub %>% select(houseID, subjectID, duration, mode)
 ```
 
-```{r TravelSurvey, eval = !RDS, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
+```{r TravelSurvey, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
 NHTS <- new("TravelSurvey", person = perpub, trip = trippub, house = hhpub)
 saveRDS(NHTS, file = "./R/data/NHTS.ts.rds")
 ```
