@@ -10,10 +10,9 @@ library("devtools")
 install("~/ITHIM/")
 library("ITHIM")
 opts_knit$set(root.dir = "~/NHTS/")
-RDS <- FALSE
 ```
 ## Trip Data
-```{r trippub, eval = !RDS, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+```{r trippub, eval = TRUE, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 
 trippub.raw <- read.csv(file = "./data/trippub.csv", stringsAsFactors = FALSE)
 
@@ -36,7 +35,7 @@ trippub <- with(trippub,{
 trippub <- trippub %>% select(houseID, subjectID, duration, mode)
 ```
 ## Person Data
-```{r perpub, eval = !RDS, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+```{r perpub, eval = TRUE, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 perpub <- read.csv(file = "./data/perpub.csv", stringsAsFactors = FALSE)
 perpub <- with(perpub,{
                     data.frame(HOUSEID = as.character(HOUSEID),
@@ -52,7 +51,7 @@ perpub <- with(perpub,{
 perpub <- perpub %>% select(houseID, subjectID, sex, age)
 ```
 ## Household Data
-```{r hhpub, eval = !RDS, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
+```{r hhpub, eval = TRUE, echo = TRUE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 hhpub.raw <- read.csv(file = "./data/hhpub.csv", stringsAsFactors = FALSE)
 hhpub <- with(hhpub.raw,{
                     data.frame(houseID = as.character(HOUSEID),
@@ -80,17 +79,25 @@ hhpub <- within(hhpub, {
 hhpub <- hhpub %>% select(houseID, location = HH_CBSA)
 ```
 
-```{r TravelSurvey, eval = !RDS, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
+```{r TravelSurvey, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
 NHTS <- new("TravelSurvey", person = perpub, trip = trippub, house = hhpub)
 saveRDS(NHTS, file = "./R/data/NHTS.ts.rds")
 ```
 
-```{r TravelSurvey2, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
+
+<!--~~~~~~~~~~~~~~~~~~~~~~~~-->
+<!--~~~~~~~~~~~~~~~~~~~~~~~~-->
+<!--~~~~~~ ARCHIVE ~~~~~~~~~-->
+<!--~~~~~~~~~~~~~~~~~~~~~~~~-->
+<!--~~~~~~~~~~~~~~~~~~~~~~~~-->
+<!--~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+```{r TravelSurvey2, eval = FALSE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE}
 NHTS <- readRDS(file = "~/NHTS/R/data/NHTS.ts.rds")
 inner_join(getTA(NHTS, type = "day"), getp0(NHTS, type = "day"), by = "location")
 ```
 
-```{r TravelSurvey3, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
+```{r TravelSurvey3, eval = FALSE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE}
 hhpub.meta <- hhpub.raw %>% select(houseID = HOUSEID, BIKE, WALK) %>% mutate(houseID = as.character(houseID))
 
 hhpub.meta <- within(hhpub.meta,{
@@ -103,7 +110,7 @@ hhpub.meta <- within(hhpub.meta,{
 ```
 
 
-```{r TravelSurvey3c, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
+```{r TravelSurvey3c, eval = FALSE, echo = FALSE, warning = FALSE, error = FALSE, message = FALSE}
 ACTIVE.df <- inner_join(NHTS@house, hhpub.meta, by = "houseID") %>% group_by(location) %>% count(ACTIVE.weekly) %>% spread(ACTIVE.weekly, n, fill = 0) %>% mutate(p0 = inactive/(active+inactive)) %>% select(location, p0)
 
 p0.df <- inner_join(ACTIVE.df, getp0(NHTS, type = "day"), by = "location", suffix = c(".survey",".data"))
@@ -125,12 +132,6 @@ TA
 p0
 
 ```
-<!--~~~~~~~~~~~~~~~~~~~~~~~~-->
-<!--~~~~~~~~~~~~~~~~~~~~~~~~-->
-<!--~~~~~~ ARCHIVE ~~~~~~~~~-->
-<!--~~~~~~~~~~~~~~~~~~~~~~~~-->
-<!--~~~~~~~~~~~~~~~~~~~~~~~~-->
-<!--~~~~~~~~~~~~~~~~~~~~~~~~-->
 
 ```{r join, eval = FALSE, echo = FALSE, results = "show", warning = FALSE, error = FALSE, message = FALSE, results="asis"}
 NHTS.df <- dplyr::left_join(perpub, trippub, by = c("houseID","subjectID"))
