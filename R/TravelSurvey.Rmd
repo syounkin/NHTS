@@ -58,7 +58,7 @@ trippub <- within(trippub.raw,{
     houseID = as.character(HOUSEID)
     subjectID = as.character(PERSONID)
     duration = ifelse(as.numeric(TRVLCMIN) < 0, as.numeric(NA), as.numeric(TRVLCMIN))
-    mode = factor(ifelse(TRPTRANS %in% c(-9,-8,-7,97), NA, ifelse(TRPTRANS == 1, "walk", ifelse(TRPTRANS == 2, "cycle", "other"))))
+    mode = factor(ifelse(TRPTRANS %in% c(-9,-8,-7,97), NA, ifelse(TRPTRANS == 1, "walk", ifelse(TRPTRANS == 2, "cycle", "other"))), levels = c("walk","cycle","other"))
 })
 
 trippub <- trippub %>% select(houseID, subjectID, duration, mode)
