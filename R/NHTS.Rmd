@@ -74,9 +74,10 @@ cbsaNames <- cbsaNames %>% filter(!is.na(cbsacode)) %>% group_by(cbsacode) %>% s
 hhpub <- within(hhpub, {
     HH_CBSA <- ifelse(HH_CBSA == "XXXXX", paste0(HHSTATE,"-XXXXX"), as.character(HH_CBSA))
     HH_CBSA <- factor(HH_CBSA, levels = c(cbsaNames$cbsacode, paste0(levels(HHSTATE),"-XXXXX")), labels = c(as.character(cbsaNames$cbsatitle),paste0(levels(HHSTATE),"-XXXXX")))
+    year <- "2017"
 })
 
-hhpub <- hhpub %>% select(houseID, location = HH_CBSA)
+hhpub <- hhpub %>% select(houseID, location = HH_CBSA, year)
 ```
 
 ```{r TravelSurvey, eval = TRUE, echo = TRUE, warning = FALSE, error = FALSE, message = FALSE}
