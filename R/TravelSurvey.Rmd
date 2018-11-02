@@ -21,9 +21,10 @@ hhpub.raw <- read.csv(file = "./data/hhpub.csv", stringsAsFactors = FALSE)
 hhpub <- within(hhpub.raw,{
     houseID = as.character(HOUSEID)
     location = factor(as.character(HHSTATE))
+    year = "2017"
 })
 
-hhpub <- hhpub %>% select(houseID, location)
+hhpub <- hhpub %>% select(houseID, location, year)
 ```
 
 ## Person Data
